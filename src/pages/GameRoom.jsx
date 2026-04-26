@@ -15,7 +15,7 @@ const GameRoom = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [isWinning, setIsWinning] = useState(null);
     const [socket, setSocket] = useState(null);
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+    const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005').trim();
 
     useEffect(() => {
         const newSocket = io(API_URL);
