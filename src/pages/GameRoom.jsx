@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { Timer, Trophy, TrendingUp, History, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Timer, Trophy, TrendingUp, History, Plus, AlertCircle, CheckCircle2, X, Frown, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const GameRoom = () => {
@@ -16,6 +16,8 @@ const GameRoom = () => {
     const [isWinning, setIsWinning] = useState(null);
     const [socket, setSocket] = useState(null);
     const [hasPlacedBet, setHasPlacedBet] = useState(false);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [resultData, setResultData] = useState(null);
     const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005').trim();
 
     useEffect(() => {
@@ -37,17 +39,26 @@ const GameRoom = () => {
             fetchHistory();
             fetchUserProfile(); // To update balance
 
-            if (betNumber !== null && betNumber === result.winningNumber) {
-                setIsWinning(true);
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 }
+            if (hasPlacedBet) {
+                const won = betNumber === result.winningNumber;
+                setIsWinning(won);
+                setResultData({
+                    won,
+                    winningNumber: result.winningNumber,
+                    payout: won ? betAmount * 2 : 0
                 });
-                setMessage({ type: 'success', text: `WINNER! Round open number was ${result.winningNumber}. You won ${betAmount * 2} coins!` });
-            } else {
-                setIsWinning(false);
-                setMessage({ type: 'info', text: `Round ended. Opening number was ${result.winningNumber}.` });
+                setShowResultModal(true);
+
+                if (won) {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                    setMessage({ type: 'success', text: `WINNER! Round open number was ${result.winningNumber}. You won ${betAmount * 2} coins!` });
+                } else {
+                    setMessage({ type: 'info', text: `Round ended. Opening number was ${result.winningNumber}.` });
+                }
             }
         });
 
@@ -230,6 +241,67 @@ const GameRoom = () => {
                     ))}
                 </div>
             </div>
+            
+            {/* Result Modal */}
+            {showResultModal && resultData && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                    onClick={() => setShowResultModal(false)}
+                >
+                    <div 
+                        className="glass w-full max-w-sm rounded-3xl p-8 relative overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Decorative background element */}
+                        <div className={`absolute -top-24 -right-24 w-48 h-48 blur-3xl rounded-full ${resultData.won ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}></div>
+                        
+                        <button 
+                            onClick={() => setShowResultModal(false)}
+                            className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white/40 hover:text-white"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="flex flex-col items-center text-center space-y-6 relative z-10">
+                            <div className={`p-5 rounded-3xl ${resultData.won ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                {resultData.won ? <PartyPopper size={48} /> : <Frown size={48} />}
+                            </div>
+
+                            <div>
+                                <h2 className={`text-3xl font-black mb-2 ${resultData.won ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {resultData.won ? 'CONGRATULATIONS!' : 'OOPS! BETTER LUCK'}
+                                </h2>
+                                <p className="text-white/60 font-medium">
+                                    {resultData.won 
+                                        ? `You predicted the number ${resultData.winningNumber} correctly!`
+                                        : `The winning number was ${resultData.winningNumber}. Well played!`}
+                                </p>
+                            </div>
+
+                            <div className="w-full bg-white/5 rounded-2xl p-6 border border-white/5">
+                                <p className="text-xs uppercase tracking-widest text-white/30 font-bold mb-1">
+                                    {resultData.won ? 'Winning Amount' : 'Better Luck Next Time'}
+                                </p>
+                                <p className={`text-4xl font-black ${resultData.won ? 'text-emerald-400' : 'text-white/40'}`}>
+                                    {resultData.won ? `+${resultData.payout}` : '0'}
+                                </p>
+                                <p className="text-[10px] text-white/20 mt-2 font-bold uppercase tracking-tighter">Coins added to your wallet</p>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowResultModal(false)}
+                                className={`w-full py-4 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg ${
+                                    resultData.won 
+                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/20' 
+                                        : 'bg-white/10 hover:bg-white/20'
+                                }`}
+                            >
+                                {resultData.won ? 'AWESOME!' : 'TRY AGAIN'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
