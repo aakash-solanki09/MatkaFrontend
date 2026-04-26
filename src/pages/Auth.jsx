@@ -9,6 +9,7 @@ const Auth = () => {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const { login, register } = useAuth();
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ const Auth = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setMessage('');
+        setLoading(true);
         try {
             if (isLogin) {
                 await login(email, password);
@@ -25,9 +28,19 @@ const Auth = () => {
                 setIsLogin(true);
                 setMessage('Registration successful! Please login.');
                 setUsername('');
+                setEmail('');
+                setPassword('');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Something went wrong');
+            const errMsg = err.response?.data?.message || 'Something went wrong. Please try again.';
+            setError(errMsg);
+            if (isLogin && (errMsg.includes('Invalid') || errMsg.includes('not found'))) {
+                setMessage("Don't have an account? Click 'Sign Up' below!");
+            } else if (!isLogin && errMsg.includes('already exists')) {
+                setMessage("Already have an account? Click 'Sign In' below!");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -88,9 +101,20 @@ const Auth = () => {
 
                         <button
                             type="submit"
-                            className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transform hover:-translate-y-0.5 transition-all mt-4 active:scale-95"
+                            disabled={loading}
+                            className={`w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transform transition-all mt-4 active:scale-95 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5'}`}
                         >
-                            {isLogin ? 'Sign In' : 'Sign Up'}
+                            {loading ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Processing...</span>
+                                </>
+                            ) : (
+                                isLogin ? 'Sign In' : 'Sign Up'
+                            )}
                         </button>
                     </form>
 

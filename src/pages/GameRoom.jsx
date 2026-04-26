@@ -15,6 +15,7 @@ const GameRoom = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [isWinning, setIsWinning] = useState(null);
     const [socket, setSocket] = useState(null);
+    const [hasPlacedBet, setHasPlacedBet] = useState(false);
     const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005').trim();
 
     useEffect(() => {
@@ -26,6 +27,7 @@ const GameRoom = () => {
         newSocket.on('newRound', (round) => {
             setCurrentRound(round);
             setBetNumber(null);
+            setHasPlacedBet(false);
             setIsWinning(null);
             setMessage({ type: '', text: '' });
         });
@@ -95,6 +97,7 @@ const GameRoom = () => {
             }, config);
 
             updateWallet(user.walletBalance - betAmount);
+            setHasPlacedBet(true);
             setMessage({ type: 'success', text: `Bet placed: ${betAmount} coins on ${betNumber}` });
         } catch (err) {
             setMessage({ type: 'error', text: err.response?.data?.message || 'Error placing bet' });
@@ -199,13 +202,13 @@ const GameRoom = () => {
                     </div>
                     <button
                         onClick={handlePlaceBet}
-                        disabled={timeLeft <= 2}
-                        className={`flex-[1.5] rounded-2xl font-black text-xl tracking-wider shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-3 ${timeLeft <= 2
+                        disabled={timeLeft <= 5 || hasPlacedBet}
+                        className={`flex-[1.5] rounded-2xl font-black text-xl tracking-wider shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-3 ${timeLeft <= 5 || hasPlacedBet
                             ? 'bg-white/5 text-white/20 cursor-not-allowed grayscale'
                             : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/20'
                             }`}
                     >
-                        {timeLeft <= 2 ? 'BETS CLOSED' : 'PLACE MY BET'}
+                        {hasPlacedBet ? 'BET PLACED' : timeLeft <= 5 ? 'BETS CLOSED' : 'PLACE MY BET'}
                     </button>
                 </div>
             </div>
