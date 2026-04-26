@@ -20,6 +20,17 @@ const GameRoom = () => {
     const [resultData, setResultData] = useState(null);
     const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5005').trim();
 
+    // Use refs to avoid stale closures in socket listeners
+    const hasPlacedBetRef = useRef(hasPlacedBet);
+    const betNumberRef = useRef(betNumber);
+    const betAmountRef = useRef(betAmount);
+
+    useEffect(() => {
+        hasPlacedBetRef.current = hasPlacedBet;
+        betNumberRef.current = betNumber;
+        betAmountRef.current = betAmount;
+    }, [hasPlacedBet, betNumber, betAmount]);
+
     useEffect(() => {
         const newSocket = io(API_URL);
         setSocket(newSocket);
@@ -39,13 +50,13 @@ const GameRoom = () => {
             fetchHistory();
             fetchUserProfile(); // To update balance
 
-            if (hasPlacedBet) {
-                const won = betNumber === result.winningNumber;
+            if (hasPlacedBetRef.current) {
+                const won = betNumberRef.current === result.winningNumber;
                 setIsWinning(won);
                 setResultData({
                     won,
                     winningNumber: result.winningNumber,
-                    payout: won ? betAmount * 2 : 0
+                    payout: won ? betAmountRef.current * 2 : 0
                 });
                 setShowResultModal(true);
 
@@ -55,7 +66,7 @@ const GameRoom = () => {
                         spread: 70,
                         origin: { y: 0.6 }
                     });
-                    setMessage({ type: 'success', text: `WINNER! Round open number was ${result.winningNumber}. You won ${betAmount * 2} coins!` });
+                    setMessage({ type: 'success', text: `WINNER! Round open number was ${result.winningNumber}. You won ${betAmountRef.current * 2} coins!` });
                 } else {
                     setMessage({ type: 'info', text: `Round ended. Opening number was ${result.winningNumber}.` });
                 }
@@ -65,7 +76,7 @@ const GameRoom = () => {
         fetchHistory();
 
         return () => newSocket.close();
-    }, [betNumber, betAmount]);
+    }, []); // Empty dependency array keeps socket connection stable
 
     const fetchHistory = async () => {
         try {
