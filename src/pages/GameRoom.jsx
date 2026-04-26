@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { Timer, Trophy, TrendingUp, History, Plus, AlertCircle, CheckCircle2, X, Frown, PartyPopper, ChevronLeft, Volume2 } from 'lucide-react';
+import { Timer, Trophy, TrendingUp, History, Plus, AlertCircle, CheckCircle2, X, Frown, PartyPopper, ChevronLeft, Volume2, LogOut, Coins } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const GameRoom = () => {
-    const { user, addCoins, updateWallet } = useAuth();
+    const { user, addCoins, updateWallet, logout } = useAuth();
     const [timeLeft, setTimeLeft] = useState(30);
     const [currentRound, setCurrentRound] = useState(null);
     const [activeTab, setActiveTab] = useState('record');
@@ -156,9 +156,19 @@ const GameRoom = () => {
         <div className="max-w-md mx-auto bg-[#f5f5f5] min-h-screen pb-20 relative font-sans overflow-x-hidden">
             {/* Top Navigation */}
             <div className="bg-[#d23838] text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
-                <ChevronLeft className="w-6 h-6" />
-                <h1 className="text-xl font-bold tracking-tight">Matka</h1>
-                <Volume2 className="w-6 h-6" />
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold tracking-tight">Matka Fun</h1>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+                        <Coins className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm font-black tracking-tight">{user.walletBalance.toLocaleString()}</span>
+                    </div>
+                    <button onClick={logout} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all active:scale-95">
+                        <LogOut className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Notification Toast */}
@@ -410,12 +420,6 @@ const GameRoom = () => {
                 </div>
             )}
 
-            {/* Floating Balance */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md border border-white/10 z-[60]">
-                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center font-black text-black">₹</div>
-                <p className="text-lg font-black tracking-tight">{user.walletBalance.toLocaleString()}</p>
-                <button onClick={() => addCoins(1000)} className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition-colors"><Plus size={14}/></button>
-            </div>
         </div>
     );
 };

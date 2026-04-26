@@ -17,7 +17,6 @@ const App = () => {
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-[#0f172a] text-white">
-          <Navbar />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
